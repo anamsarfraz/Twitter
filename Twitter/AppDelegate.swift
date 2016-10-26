@@ -7,18 +7,31 @@
 //
 
 import UIKit
-
+import BDBOAuth1Manager
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
+    var storyboard = UIStoryboard(name: "Main", bundle: nil)
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        NotificationCenter.default.addObserver(self, selector: "userDidLogout", name: NSNotification.Name(rawValue: userDidLogoutNotification), object: nil)
+        if User.currentUser != nil {
+            // Go to the logged in screen
+            print ("current user detected: \(User.currentUser?.name)")
+            var vc = storyboard.instantiateViewController(withIdentifier: "TweetsViewController") as UIViewController            
+            window?.rootViewController = vc
+        }
         return true
     }
 
+    func userDidLogout() {
+        var vc = storyboard.instantiateInitialViewController()! as UIViewController
+        window?.rootViewController = vc
+    }
+    
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
@@ -41,6 +54,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 
+    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+        
+        TwitterClient.sharedInstance.openURL(url: url)
 
+        return true
+    }
 }
 
