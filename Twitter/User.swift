@@ -11,7 +11,7 @@ import UIKit
 class User: NSObject {
     var name: String?
     var screenname: String?
-    var profileUrl: NSURL?
+    var profileUrl: URL?
     var tagline: String?
     var dictionary: NSDictionary?
     
@@ -21,7 +21,7 @@ class User: NSObject {
         screenname = dictionary[userScreenName] as? String
         let profileUrlString = dictionary[profileImageUrlHttps] as? String
         if let profileUrlString = profileUrlString {
-            profileUrl = NSURL(string: profileUrlString)
+            profileUrl = URL(string: profileUrlString)
         }
         tagline = dictionary[userDescription] as? String
     }
@@ -51,7 +51,7 @@ class User: NSObject {
                 let data = try! JSONSerialization.data(withJSONObject: user.dictionary!, options: [])
                 defaults.set(data, forKey: currentUserKey)
             } else {
-                defaults.set(nil, forKey: currentUserKey)
+                defaults.removeObject(forKey: currentUserKey)
             }
             defaults.synchronize()
         }

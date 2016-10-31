@@ -23,14 +23,76 @@ class TwitterClient: BDBOAuth1SessionManager {
     var loginFailure: ((Error) -> ())?
     
     
-    func homeTimeline(params: NSDictionary?, completion: @escaping (_ tweets: [Tweet]?, _ error: Error?) -> ()) {
+    func homeTimeline(params: NSDictionary?, completion: @escaping (_ tweets: [Tweet]?, _ minId: String?, _ error: Error?) -> ()) {
         
         get("1.1/statuses/home_timeline.json", parameters: params, progress: nil, success: { (operation: URLSessionDataTask, response: Any?) in
             //print ("Home timeline: \(response)")
-            let tweets = Tweet.tweetsWithArray(array: response as! [NSDictionary])
-            completion(tweets, nil)
+            let (tweets, minId) = Tweet.tweetsWithArray(array: response as! [NSDictionary])
+            completion(tweets, minId, nil)
             }, failure: { (operation: URLSessionDataTask?, error: Error) in
                 print ("Error getting home timeline: \(error.localizedDescription)")
+                completion(nil, nil, error)
+        })
+    }
+    
+    func fullTweet(params: NSDictionary?, completion: @escaping (_ response: NSDictionary?, _ error: Error?) -> ()) {
+        
+        get("1.1/statuses/show.json", parameters: params, progress: nil, success: { (operation: URLSessionDataTask, response: Any?) in
+            print ("Successfully received the full tweet: \(response)")
+            completion(response as! NSDictionary?, nil)
+            }, failure: { (operation: URLSessionDataTask?, error: Error) in
+                print ("Error getting full tweet: \(error.localizedDescription)")
+                completion(nil, error)
+        })
+    }
+
+    func favoriteTweetUpdate(favorited: Bool, params: NSDictionary?, completion: @escaping (_ response: NSDictionary?, _ error: Error?) -> ()) {
+        
+        let createOrDestroy = favorited ? "create" : "destroy"
+        post("1.1/favorites/\(createOrDestroy).json", parameters: params, progress: nil, success: { (operation: URLSessionDataTask, response: Any?) in
+            
+            //print ("Favorites count successful: \(response as! [NSDictionary])")
+            print ("Successful favorites count update")
+            print ("Favorites count successful: \(response)")
+            completion(response as! NSDictionary?, nil)
+            }, failure: { (operation: URLSessionDataTask?, error: Error) in
+                print ("Error getting favorites count: \(error.localizedDescription)")
+                completion(nil, error)
+        })
+    }
+
+    func retweetTweetUpdate(tweetId: String, params: NSDictionary?, completion: @escaping (_ response: NSDictionary?, _ error: Error?) -> ()) {
+        
+        post("1.1/statuses/retweet/\(tweetId).json", parameters: params, progress: nil, success: { (operation: URLSessionDataTask, response: Any?) in
+            print ("Successful retweet count update")
+            print ("Retweet count successful: \(response)")
+            completion(response as! NSDictionary?, nil)
+            }, failure: { (operation: URLSessionDataTask?, error: Error) in
+                print ("Error updating retweet count: \(error.localizedDescription)")
+                completion(nil, error)
+        })
+    }
+    
+    func createTweetOrReply(params: NSDictionary?, completion: @escaping (_ response: NSDictionary?, _ error: Error?) -> ()) {
+        
+        post("1.1/statuses/update.json", parameters: params, progress: nil, success: { (operation: URLSessionDataTask, response: Any?) in
+            
+            print ("Successful tweet post")
+            completion(response as! NSDictionary?, nil)
+            }, failure: { (operation: URLSessionDataTask?, error: Error) in
+                print ("error posting tweet: \(error.localizedDescription)")
+                completion(nil, error)
+        })
+    }
+
+    func destroyTweet(tweetId: String, params: NSDictionary?, completion: @escaping (_ response: NSDictionary?, _ error: Error?) -> ()) {
+        
+        post("1.1/statuses/destroy/\(tweetId).json", parameters: params, progress: nil, success: { (operation: URLSessionDataTask, response: Any?) in
+            
+            print ("Successful tweet deletion response: \(response)")
+            completion(response as! NSDictionary?, nil)
+            }, failure: { (operation: URLSessionDataTask?, error: Error) in
+                print ("Error deleting tweet: \(error.localizedDescription)")
                 completion(nil, error)
         })
     }
